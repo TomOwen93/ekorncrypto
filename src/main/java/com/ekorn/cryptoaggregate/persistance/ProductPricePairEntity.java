@@ -28,6 +28,7 @@ public class ProductPricePairEntity {
     BigDecimal price;
     BigDecimal size;
     OffsetDateTime time;
+    OffsetDateTime savedTime;
     BigDecimal bid;
     BigDecimal ask;
     BigDecimal volume;

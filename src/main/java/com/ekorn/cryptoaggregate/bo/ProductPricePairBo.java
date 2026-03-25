@@ -1,50 +1,27 @@
 package com.ekorn.cryptoaggregate.bo;
 
 import com.ekorn.cryptoaggregate.persistance.ProductPricePairEntity;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
-@Value
+@Data
 @Builder(setterPrefix = "with", toBuilder = true)
-public class ProductPricePairBO {
-    @JsonProperty("trade_id")
+public class ProductPricePairBo {
     long tradeId;
-
-    @JsonProperty("product_id")
     String productId;
-
-    @JsonProperty("base_currency")
     String baseCurrency;
-
-    @JsonProperty("quote_currency")
     String quoteCurrency;
-
-    @JsonProperty("price")
     BigDecimal price;
-
-    @JsonProperty("size")
     BigDecimal size;
-
-    @JsonProperty("time")
     OffsetDateTime time;
-
-    @JsonProperty("bid")
+    OffsetDateTime savedTime;
     BigDecimal bid;
-
-    @JsonProperty("ask")
     BigDecimal ask;
-
-    @JsonProperty("volume")
     BigDecimal volume;
-
-    @JsonProperty("rfq_volume")
     BigDecimal rfqVolume;
-
-    @JsonProperty("conversions_volume")
     BigDecimal conversionsVolume;
 
     public ProductPricePairEntity convertToEntity() {
@@ -56,6 +33,7 @@ public class ProductPricePairBO {
                 .withPrice(this.price)
                 .withSize(this.size)
                 .withTime(this.time)
+                .withSavedTime(OffsetDateTime.now())
                 .withBid(this.bid)
                 .withAsk(this.ask)
                 .withVolume(this.volume)
@@ -64,8 +42,8 @@ public class ProductPricePairBO {
                 .build();
     }
 
-    public static ProductPricePairBO from(ProductPricePairEntity productPricePairEntity) {
-        return ProductPricePairBO.builder()
+    public static ProductPricePairBo from(ProductPricePairEntity productPricePairEntity) {
+        return ProductPricePairBo.builder()
                 .withTradeId(productPricePairEntity.getTradeId())
                 .withProductId(productPricePairEntity.getProductId())
                 .withBaseCurrency(productPricePairEntity.getBaseCurrency())
@@ -73,6 +51,7 @@ public class ProductPricePairBO {
                 .withPrice(productPricePairEntity.getPrice())
                 .withSize(productPricePairEntity.getSize())
                 .withTime(productPricePairEntity.getTime())
+                .withSavedTime(productPricePairEntity.getSavedTime())
                 .withBid(productPricePairEntity.getBid())
                 .withAsk(productPricePairEntity.getAsk())
                 .withVolume(productPricePairEntity.getVolume())

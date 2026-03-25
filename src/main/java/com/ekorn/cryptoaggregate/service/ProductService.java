@@ -1,45 +1,50 @@
 package com.ekorn.cryptoaggregate.service;
 
-import com.ekorn.cryptoaggregate.bo.ProductPairBO;
-import com.ekorn.cryptoaggregate.bo.ProductPricePairBO;
+import com.ekorn.cryptoaggregate.bo.ProductPairBo;
+import com.ekorn.cryptoaggregate.bo.ProductPricePairBo;
 import com.ekorn.cryptoaggregate.client.CoinbaseClient;
-import com.ekorn.cryptoaggregate.dto.ProductPricePairDTO;
+import com.ekorn.cryptoaggregate.dto.ProductPriceResponseDto;
+import com.ekorn.cryptoaggregate.exception.ProductNotFoundException;
 import com.ekorn.cryptoaggregate.persistance.ProductPricePairEntity;
 import com.ekorn.cryptoaggregate.persistance.ProductPriceRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @AllArgsConstructor
 public class ProductService {
     private final CoinbaseClient coinbaseClient;
     private final ProductPriceRepository productPriceRepository;
-    private final ProductProviderService productProviderService;
 
-    public ProductPricePairDTO getProductPricePair(String symbol) {
-        Optional<ProductPricePairEntity> entity = productPriceRepository.findFirstByProductIdOrderByTimeDesc(symbol);
-        ProductPricePairBO bo = ProductPricePairBO.from(entity.orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.BAD_REQUEST)));
+    public ProductPriceResponseDto getProductPricePair(String symbol) {
+        Pattern dualCurrencyPattern = Pattern.compile("[A-Za-z]+-[A-Za-z]+", Pattern.CASE_INSENSITIVE);
+        Pattern singleCurrencyPattern = Pattern.compile("[A-Za-z]+", Pattern.CASE_INSENSITIVE);
 
-        return ProductPricePairDTO.from(bo);
-    }
+        Matcher dualMatcher = dualCurrencyPattern.matcher(symbol);
+        Matcher singleMatcher = singleCurrencyPattern.matcher(symbol);
 
-    @Scheduled(fixedDelay = 10000)
-    public void getAndSaveLatestProductPairPrices() {
-        List<ProductPairBO> productPairs = productProviderService.getProductPairs();
-        productPairs.forEach(this::fetchAndSaveProductPricePair);
+        Optional<ProductPricePairEntity> entity;
+        if (dualMatcher.matches()) {
+            entity = productPriceRepository.findFirstByProductIdOrderByTimeDesc(symbol);
+        } else if (singleMatcher.matches()) {
+            entity = productPriceRepository.findFirstByBaseCurrencyOrderByTimeDesc(symbol);
+        } else entity = Optional.empty();
+
+        ProductPricePairBo bo = ProductPricePairBo.from(entity.orElseThrow(() ->
+                new ProductNotFoundException(String.format("Price for symbol %s not found or not tracked yet.", symbol))));
+
+        return ProductPriceResponseDto.from(bo);
     }
 
     @Async
-    private void fetchAndSaveProductPricePair(ProductPairBO productPairBO) {
-        ProductPricePairBO productPricePairBo = coinbaseClient.findByProductId(productPairBO.getId())
+    public void fetchAndSaveProductPricePair(ProductPairBo productPairBO) {
+        ProductPricePairBo productPricePairBo = coinbaseClient.findByProductId(productPairBO.getId())
                 .convertToBO()
                 .toBuilder()
                 .withProductId(productPairBO.getId())
@@ -50,7 +55,14 @@ public class ProductService {
         saveProductPricePair(productPricePairBo);
     }
 
-    private void saveProductPricePair(ProductPricePairBO productPricePairBo) {
-        productPriceRepository.save(productPricePairBo.convertToEntity());
+    private void saveProductPricePair(ProductPricePairBo productPricePairBo) {
+        ProductPricePairEntity entity = productPricePairBo.convertToEntity();
+
+        if (!productPriceRepository.existsById(entity.getTradeId()))
+            try {
+                productPriceRepository.save(entity);
+            } catch (DataIntegrityViolationException e) {
+                System.out.printf("Trade ID %o already processed by another thread. Skipping.", entity.getTradeId());
+            }
     }
 }

@@ -1,41 +1,67 @@
 package com.ekorn.cryptoaggregate.controller;
 
 
-import com.ekorn.cryptoaggregate.bo.ProductPricePairBO;
+import com.ekorn.cryptoaggregate.bo.ProductPricePairBo;
+import com.ekorn.cryptoaggregate.dto.ProductPriceResponseDto;
+import com.ekorn.cryptoaggregate.exception.ProductNotFoundException;
 import com.ekorn.cryptoaggregate.service.ProductService;
+import jakarta.annotation.PostConstruct;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 @WebMvcTest(PricesController.class)
 public class PricesControllerTest {
-
     @Autowired
     private MockMvc mockMvc;
 
+    MockMvcTester mockMvcTester;
+
     @MockitoBean
     private ProductService productService;
-//
-//    @Test
-//    public void givenSymbolExists_whenGetProductPricePair_thenReturnProductPricePairDto() {
-//        ProductPricePairDTO mockProductPricePairDto =
-//                ProductPricePairDTO.from(getMockProductPricePair());
-//
-//        when(productService.getProductPricePair("BTC-USD")).thenReturn(mockProductPricePairDto);
-//
-//        mockMvc.perform(get("/prices/BTC-USD")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .
-//
-//
-//    }
 
-    private static ProductPricePairBO getMockProductPricePair() {
-        return ProductPricePairBO.builder()
+    @PostConstruct
+    void setUp() {
+        mockMvcTester = MockMvcTester.create(mockMvc);
+    }
+
+    @Test
+    public void givenSymbolExists_whenGetProductPricePair_thenReturnProductPricePairDto() {
+        ProductPriceResponseDto mockProductPricePairDto =
+                ProductPriceResponseDto.from(getMockProductPricePair());
+
+        when(productService.getProductPricePair("BTC-USD")).thenReturn(mockProductPricePairDto);
+
+        mockMvcTester.get().uri("/prices/BTC-USD")
+                .assertThat()
+                .hasStatus(HttpStatus.OK)
+                .bodyJson()
+                .satisfies(json -> {
+                    // used AI here because I was going in circles...
+                    assertThat(json).extractingPath("$.trade_id").isEqualTo(86326522);
+                    assertThat(json).extractingPath("$.price").isEqualTo(6268.48);
+                });
+    }
+
+    @Test
+    public void givenSymbolExists_whenGetProductPricePairFails_thenReturn404NotFound() {
+        when(productService.getProductPricePair("BTC-USD")).thenThrow(new ProductNotFoundException("Not Found"));
+        assertThat(mockMvcTester.get().uri("/prices/BTC-USD"))
+                .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    private static ProductPricePairBo getMockProductPricePair() {
+        return ProductPricePairBo.builder()
                 .withTradeId(86326522L)
                 .withProductId("BTC-USD")
                 .withBaseCurrency("BTC")

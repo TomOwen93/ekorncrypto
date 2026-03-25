@@ -1,7 +1,7 @@
 package com.ekorn.cryptoaggregate.client;
 
-import com.ekorn.cryptoaggregate.dto.ProductPairDTO;
-import com.ekorn.cryptoaggregate.dto.ProductPricePairDTO;
+import com.ekorn.cryptoaggregate.dto.ProductPairDto;
+import com.ekorn.cryptoaggregate.dto.ProductPricePairDto;
 import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +14,8 @@ import java.util.List;
 public interface CoinbaseClient {
 
     @GetMapping("/{product_id}/ticker")
-    ProductPricePairDTO findByProductId(@PathVariable("product_id") String product_id);
+    ProductPricePairDto findByProductId(@PathVariable("product_id") String product_id);
 
     @GetMapping("")
-    List<ProductPairDTO> getProductPairs();
+    List<ProductPairDto> getProductPairs();
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ProductPriceRepository extends JpaRepository<ProductPricePairEntity, String> {
+public interface ProductPriceRepository extends JpaRepository<ProductPricePairEntity, Long> {
     Optional<ProductPricePairEntity> findFirstByProductIdOrderByTimeDesc(String symbol);
+    Optional<ProductPricePairEntity> findFirstByBaseCurrencyOrderByTimeDesc(String symbol);
 }
