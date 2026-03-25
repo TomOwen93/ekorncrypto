@@ -14,7 +14,7 @@ import java.util.List;
 public class ProductProviderService {
     private final CoinbaseClient coinbaseClient;
 
-    @Cacheable
+    @Cacheable("productPairs")
     public List<ProductPairBo> getProductPairs() {
         return coinbaseClient.getProductPairs().stream()
                 .filter(productPair -> !"delisted".equals(productPair.status()))

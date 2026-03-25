@@ -9,7 +9,6 @@ import com.ekorn.cryptoaggregate.persistance.ProductPricePairEntity;
 import com.ekorn.cryptoaggregate.persistance.ProductPriceRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -42,7 +41,8 @@ public class ProductService {
         return ProductPriceResponseDto.from(bo);
     }
 
-    @Async
+//    @Async("productTaskExecutor")
+//    @RateLimiter(name = "coinbaseLimit")
     public void fetchAndSaveProductPricePair(ProductPairBo productPairBO) {
         ProductPricePairBo productPricePairBo = coinbaseClient.findByProductId(productPairBO.getId())
                 .convertToBO()
