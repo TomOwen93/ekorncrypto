@@ -1,14 +1,15 @@
 # Read me
-
 ### Build/Running
-Clone this repo, cd to the root folder and run command to build the docker image `docker build -t crypto-aggregate-app . `
+Clone this repo, cd to the root folder and run command to build the docker image:
+   `docker build -t crypto-aggregate-app . `
 
-Next run to start the image in detached mode `docker run -d -p 8080:8080 --name crypto-container crypto-aggregate-app`
+Next run to start the image in detached mode:
+   `docker run -d -p 8080:8080 --name crypto-container crypto-aggregate-app`
 
-To check logs run `docker logs -f crypto-container`
+To check logs run:
+   `docker logs -f crypto-container`
 
 For accessing the h2 memory navigate to http://localhost:8080/h2-console/ and use the credentials in the application.yaml
-
 For hitting the price endpoint, you can use postman or similar and send a GET to http://localhost:8080/prices/{symbol}
 
 ### Assumptions and Notes
