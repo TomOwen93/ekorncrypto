@@ -48,6 +48,10 @@ For hitting the price endpoint, you can use postman or similar and send a GET to
     * Assumed that "delisted" status fields meant we shouldn't persist/show them to the caller.
     * Added productId/base/quote currency to the ProductPricePairEntity for querying purposes. Could definitely change
       it to show these to the user in our endpoint's response body though.
+* Scaling
+  * At scale we could utilise a distributed cache (for prices AND product pairs) as opposed to having an in memory one. This would decouple our persistence from the service and mean when we horizontally scale with more instances, they could all access the cached data.
+  * Would have to take into account rate limiting issues (which is where a cache might help anyway) and use a circuit breaker on the client calls
+  * Extending this app to use multiple exchanges would require some refactoring, mainly using abstraction (ClientProvider interface as opposed to CoinbaseClient for example)
 
 ### AI Usage
 I used Gemini for solving a few issues with MockMvc tests, Dockerfile setup, as well as fixing my issues with @Async/rate limiting.
