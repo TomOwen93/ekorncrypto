@@ -1,9 +1,9 @@
 # Read me
 ### Build/Running
-Clone this repo, cd to the root folder and run command to build the docker image:
+Clone this repo, cd to the root folder and run this command to build the docker image:
    `docker build -t crypto-aggregate-app . `
 
-Next run to start the image in detached mode:
+Next run this to start the image in detached mode:
    `docker run -d -p 8080:8080 --name crypto-container crypto-aggregate-app`
 
 To check logs run:
